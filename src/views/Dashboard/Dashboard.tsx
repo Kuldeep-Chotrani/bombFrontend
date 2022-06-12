@@ -54,7 +54,28 @@ import { VectorIcon } from './VectorIcon';
 import { WithdrawButtons2 } from './WithdrawButtons2/WithdrawButtons2';
 import { WithdrawButtons3 } from './WithdrawButtons3/WithdrawButtons3';
 import { WithdrawButtons } from './WithdrawButtons/WithdrawButtons';
+import moment from 'moment';
+import ProgressCountdown from '../Boardroom/components/ProgressCountdown';
+import useTreasuryAllocationTimes from '../../hooks/useTreasuryAllocationTimes';
+import useCurrentEpoch from '../../hooks/useCurrentEpoch';
+import { Box, Card, CardContent, Button, Typography, Grid } from '@material-ui/core';
+import useBombStats from '../../hooks/useBombStats';
+import useBondStats from '../../hooks/useBondStats';
+import usebShareStats from '../../hooks/usebShareStats';
+import { roundAndFormatNumber } from '../../0x';
+import useBombFinance from '../../hooks/useBombFinance';
+import useCashPriceInLastTWAP from '../../hooks/useCashPriceInLastTWAP';
+import ExchangeCard from '../Bond/components/ExchangeCard';
+import { BOND_REDEEM_PRICE, BOND_REDEEM_PRICE_BN } from '../../bomb-finance/constants';
+import {useTransactionAdder} from '../../state/transactions/hooks';
+import useBondsPurchasable from '../../hooks/useBondsPurchasable';
+import useTokenBalance from '../../hooks/useTokenBalance';
+import {getDisplayBalance} from '../../utils/formatBalance';
+import { useWallet } from 'use-wallet';
+import UnlockWallet from '../../components/UnlockWallet';
+import useBank from '../../hooks/useBank';
 
+import useStatsForPool from '../../hooks/useStatsForPool';
 interface Props {
   className?: string;
   classes?: {
@@ -215,6 +236,87 @@ interface Props {
   };
 }
 export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
+
+  const { account } = useWallet();
+  const bombStats = useBombStats();
+  const bShareStats = usebShareStats();
+  const tBondStats = useBondStats();
+  const bombFinance = useBombFinance();
+  const addTransaction = useTransactionAdder();
+  const bank_bomb = useBank('BombBtcbLPBShareRewardPool');
+  let statsOnPool_bomb = useStatsForPool(bank_bomb);
+  const bank_bshare = useBank('BshareBnbLPBShareRewardPool');
+  let statsOnPool_bshare = useStatsForPool(bank_bshare);
+  const bank_bbond = useBank('BBondBShareRewardPool');
+  let statsOnPool_bbond = useStatsForPool(bank_bbond);
+  const bbondBalance = useTokenBalance(bombFinance?.BBOND);
+  console.log(bombFinance)
+  const displayBbondBalance = useMemo(() => getDisplayBalance(bbondBalance, 18, 2), [bbondBalance]);
+
+  const bombPriceInBNB = useMemo(() => (bombStats ? Number(bombStats.tokenInFtm).toFixed(4) : null), [bombStats]);
+  const bombPriceInDollars = useMemo(
+    () => (bombStats ? Number(bombStats.priceInDollars).toFixed(2) : null),
+    [bombStats],
+  );
+  const bombCirculatingSupply = useMemo(() => (bombStats ? String(bombStats.circulatingSupply) : null), [bombStats]);
+  const bombTotalSupply = useMemo(() => (bombStats ? String(bombStats.totalSupply) : null), [bombStats]);
+
+  const bSharePriceInDollars = useMemo(
+    () => (bShareStats ? Number(bShareStats.priceInDollars).toFixed(2) : null),
+    [bShareStats],
+  );
+  const bSharePriceInBNB = useMemo(
+    () => (bShareStats ? Number(bShareStats.tokenInFtm).toFixed(4) : null),
+    [bShareStats],
+  );
+  const bShareCirculatingSupply = useMemo(
+    () => (bShareStats ? String(bShareStats.circulatingSupply) : null),
+    [bShareStats],
+  );
+  const bShareTotalSupply = useMemo(() => (bShareStats ? String(bShareStats.totalSupply) : null), [bShareStats]);
+
+  const tBondPriceInDollars = useMemo(
+    () => (tBondStats ? Number(tBondStats.priceInDollars).toFixed(2) : null),
+    [tBondStats],
+  );
+  const tBondPriceInBNB = useMemo(() => (tBondStats ? Number(tBondStats.tokenInFtm).toFixed(4) : null), [tBondStats]);
+  const tBondCirculatingSupply = useMemo(
+    () => (tBondStats ? String(tBondStats.circulatingSupply) : null),
+    [tBondStats],
+  );
+  const tBondTotalSupply = useMemo(() => (tBondStats ? String(tBondStats.totalSupply) : null), [tBondStats]);
+  const cashPrice = useCashPriceInLastTWAP();
+  const { to } = useTreasuryAllocationTimes();
+  const currentEpoch = useCurrentEpoch();
+  const bondStat = useBondStats();
+  const isBondRedeemable = useMemo(() => cashPrice.gt(BOND_REDEEM_PRICE_BN), [cashPrice]);
+  const isBondPurchasable = useMemo(() => Number(bondStat?.tokenInFtm) < 1.01, [bondStat]);
+  const bondsPurchasable = useBondsPurchasable();
+
+  const bombBalance = useTokenBalance(bombFinance.BOMB);
+  const displayBombBalance = useMemo(() => getDisplayBalance(bombBalance, 18, 2), [bombBalance]);
+
+  const bshareBalance = useTokenBalance(bombFinance.BSHARE);
+  const displayBshareBalance = useMemo(() => getDisplayBalance(bshareBalance, 18, 2), [bshareBalance]);
+
+  
+  const handleRedeemBonds = useCallback(
+    async (amount: string) => {
+      const tx = await bombFinance.redeemBonds(amount);
+      addTransaction(tx, {summary: `Redeem ${amount} BBOND`});
+    },
+    [bombFinance, addTransaction],
+  );
+  const handleBuyBonds = useCallback(
+    async (amount: string) => {
+      const tx = await bombFinance.buyBonds(amount);
+      addTransaction(tx, {
+        summary: `Buy ${Number(amount).toFixed(2)} BBOND with ${amount} BOMB`,
+      });
+    },
+    [bombFinance, addTransaction],
+  );
+  
   return (
     <div className={`${classes.root} ${props.className || ''}`}>
       <Topology1Icon className={`${classes.topology1} ${props.classes?.topology1 || ''}`} />
@@ -233,7 +335,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
             6.0000
             <br />
           </span>
-          <span className={classes.label3}>≈ $1171.62</span>
+          <span className={classes.label3}>≈ $0.00</span>
         </span>
       </div>
       <div className={`${classes.earned1660441329888} ${props.classes?.earned1660441329888 || ''}`}>
@@ -261,7 +363,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
             Daily Returns:
             <br />
           </span>
-          <span className={classes.label8}>2%</span>
+          <span className={classes.label8}>{statsOnPool_bshare?.dailyAPR}%</span>
           <span className={classes.label9}>
             {' '}
             <br />
@@ -275,18 +377,16 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
         <span className={classes.labelWrapper4}>
           <span className={classes.label10}>
             Current Epoch
-            <br />
           </span>
-          <span className={classes.label11}>258</span>
+          <Typography className={classes.label11}>{Number(currentEpoch)}</Typography>
         </span>
       </div>
       <div className={`${classes._33836NextEpochIn} ${props.classes?._33836NextEpochIn || ''}`}>
         <span className={classes.labelWrapper5}>
+        <span className={classes.label13}>Next Epoch in</span>
           <span className={classes.label12}>
-            03:38:36
-            <br />
+           <ProgressCountdown base={moment().toDate()} hideBar={true} deadline={to} description="Next Epoch" />
           </span>
-          <span className={classes.label13}>Next Epoch in</span>
         </span>
       </div>
       <Line75Icon className={`${classes.line75} ${props.classes?.line75 || ''}`} />
@@ -300,21 +400,21 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       <Ellipse287Icon2 className={`${classes.ellipse2872} ${props.classes?.ellipse2872 || ''}`} />
       <div className={`${classes.bshares3} ${props.classes?.bshares3 || ''}`}></div>
       <div className={`${classes.unity2} ${props.classes?.unity2 || ''}`}>$BSHARE</div>
-      <div className={`${classes.unity3} ${props.classes?.unity3 || ''}`}>11.43K</div>
-      <div className={`${classes.unity4} ${props.classes?.unity4 || ''}`}>8.49m</div>
+      <div className={`${classes.unity3} ${props.classes?.unity3 || ''}`}>{bShareCirculatingSupply}</div>
+      <div className={`${classes.unity4} ${props.classes?.unity4 || ''}`}>{bShareTotalSupply}</div>
       <div className={`${classes.unity5} ${props.classes?.unity5 || ''}`}>
-        $300
+      ${bSharePriceInDollars ? bSharePriceInDollars : '-.--'}
         <br />
-        13000 BTCB
+        {tBondPriceInBNB ? tBondPriceInBNB : '-.----'} BTC
       </div>
       <div className={`${classes.wMetaMask} ${props.classes?.wMetaMask || ''}`}></div>
       <div className={`${classes.unity6} ${props.classes?.unity6 || ''}`}>$BBOND</div>
-      <div className={`${classes.unity7} ${props.classes?.unity7 || ''}`}>20.00K</div>
-      <div className={`${classes.unity8} ${props.classes?.unity8 || ''}`}>175k</div>
+      <div className={`${classes.unity7} ${props.classes?.unity7 || ''}`}>{tBondCirculatingSupply}</div>
+      <div className={`${classes.unity8} ${props.classes?.unity8 || ''}`}>{tBondTotalSupply}</div>
       <div className={`${classes.unity9} ${props.classes?.unity9 || ''}`}>
-        $0.28
+      ${tBondPriceInDollars ? tBondPriceInDollars : '-.--'}
         <br />
-        1.15 BTCB
+        {tBondPriceInBNB ? tBondPriceInBNB : '-.----'} BTC
       </div>
       <div className={`${classes.wMetaMask2} ${props.classes?.wMetaMask2 || ''}`}></div>
       <div className={`${classes.lastEpochTWAP122} ${props.classes?.lastEpochTWAP122 || ''}`}>
@@ -340,11 +440,11 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       </div>
       <div className={`${classes.wMetaMask3} ${props.classes?.wMetaMask3 || ''}`}></div>
       <div className={`${classes.unity10} ${props.classes?.unity10 || ''}`}>
-        $0.24 <br />
-        1.05 BTCB
+      ${bombPriceInDollars ? bombPriceInDollars: '-.--'} <br />
+      {bombPriceInBNB ? bombPriceInBNB : '-.----'} BTC
       </div>
-      <div className={`${classes.unity11} ${props.classes?.unity11 || ''}`}>8.66M</div>
-      <div className={`${classes.unity12} ${props.classes?.unity12 || ''}`}> 60.9k</div>
+      <div className={`${classes.unity11} ${props.classes?.unity11 || ''}`}>{bombCirculatingSupply} </div>
+      <div className={`${classes.unity12} ${props.classes?.unity12 || ''}`}> {bombTotalSupply}</div>
       <Ellipse300Icon className={`${classes.ellipse300} ${props.classes?.ellipse300 || ''}`} />
       <Ellipse241Icon className={`${classes.ellipse241} ${props.classes?.ellipse241 || ''}`} />
       <Ellipse244Icon className={`${classes.ellipse244} ${props.classes?.ellipse244 || ''}`} />
@@ -437,7 +537,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
             <br />{' '}
           </span>
           <span className={classes.label32}>
-            124.21 <br />≈ $1171.62
+            124.21 <br />≈ ${displayBombBalance}
           </span>
         </span>
       </div>
@@ -446,7 +546,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
           <span className={classes.label33}>
             Daily Returns: <br />
           </span>
-          <span className={classes.label34}>2%</span>
+          <span className={classes.label34}>{statsOnPool_bomb?.dailyAPR}</span>
           <span className={classes.label35}>
             {' '}
             <br />
@@ -456,7 +556,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       <div className={`${classes.tVL108430} ${props.classes?.tVL108430 || ''}`}>
         <span className={classes.labelWrapper14}>
           <span className={classes.label36}>TVL: </span>
-          <span className={classes.label37}>$1,008,430</span>
+          <span className={classes.label37}>${statsOnPool_bshare?.TVL}</span>
         </span>
       </div>
       <ClaimRewardsButtons />
@@ -482,7 +582,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
             <br />{' '}
           </span>
           <span className={classes.label41}>
-            124.21 <br />≈ $1171.62
+            124.21 <br />≈ ${displayBshareBalance}
           </span>
         </span>
       </div>
@@ -492,14 +592,14 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
             Daily Returns: <br />
           </span>
           <span className={classes.label43}>
-            2% <br />
+          {statsOnPool_bshare?.dailyAPR}% <br />
           </span>
         </span>
       </div>
       <div className={`${classes.tVL1084302} ${props.classes?.tVL1084302 || ''}`}>
         <span className={classes.labelWrapper18}>
           <span className={classes.label44}>TVL: </span>
-          <span className={classes.label45}>$1,008,430</span>
+          <span className={classes.label45}>${statsOnPool_bomb?.TVL}</span>
         </span>
       </div>
       <ClaimRewardsButtons3 />
@@ -530,7 +630,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       <Line80Icon className={`${classes.line80} ${props.classes?.line80 || ''}`} />
       <div className={`${classes.bonds} ${props.classes?.bonds || ''}`}>Bonds </div>
       <div className={`${classes.bombIsOverPeg} ${props.classes?.bombIsOverPeg || ''}`}>Bomb is over peg</div>
-      <div className={`${classes.bBond62872BTCB} ${props.classes?.bBond62872BTCB || ''}`}>BBond = 6.2872 BTCB</div>
+      <div className={`${classes.bBond62872BTCB} ${props.classes?.bBond62872BTCB || ''}`}>BBond ={Number(bondStat?.tokenInFtm).toFixed(4) || '-'} BTCB</div>
       <div className={`${classes.currentPriceUnite2} ${props.classes?.currentPriceUnite2 || ''}`}>
         Current Price: (Bomb)^2
       </div>
@@ -541,7 +641,11 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       <div className={`${classes.availableToRedeem} ${props.classes?.availableToRedeem || ''}`}>
         Available to redeem:{' '}
       </div>
-      <div className={`${classes._456} ${props.classes?._456 || ''}`}>456</div>
+      {!!account ? (
+      <div className={`${classes._456} ${props.classes?._456 || ''}`}>{displayBbondBalance}</div>
+     ) : (
+        <UnlockWallet />
+    )}
       <div className={`${classes.bbond3} ${props.classes?.bbond3 || ''}`}></div>
       <div className={`${classes.bbond4} ${props.classes?.bbond4 || ''}`}></div>
       <div className={`${classes.frame677} ${props.classes?.frame677 || ''}`}>
@@ -565,7 +669,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       <div className={`${classes.tVL1084303} ${props.classes?.tVL1084303 || ''}`}>
         <span className={classes.labelWrapper19}>
           <span className={classes.label46}>TVL: </span>
-          <span className={classes.label47}>$1,008,430</span>
+          <span className={classes.label47}>${statsOnPool_bshare?.TVL}</span>
         </span>
       </div>
       <ClaimRewardsButtons4 />
