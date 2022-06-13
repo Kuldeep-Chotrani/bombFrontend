@@ -49,6 +49,7 @@ import { Rectangle22664Icon } from './Rectangle22664Icon';
 import { Rectangle22665Icon } from './Rectangle22665Icon';
 import { Rectangle22704Icon } from './Rectangle22704Icon';
 import { RedeemButtons } from './RedeemButtons/RedeemButtons';
+import { RedeemButtons2 } from './RedeemButtons2/RedeemButtons2';
 import { Topology1Icon } from './Topology1Icon';
 import { VectorIcon } from './VectorIcon';
 import { WithdrawButtons2 } from './WithdrawButtons2/WithdrawButtons2';
@@ -76,6 +77,10 @@ import UnlockWallet from '../../components/UnlockWallet';
 import useBank from '../../hooks/useBank';
 
 import useStatsForPool from '../../hooks/useStatsForPool';
+import WithdrawModal from '../Stake/components/WithdrawModal';
+
+import useWithdrawFromBomb from '../../hooks/useWithdrawFromBomb';
+import useModal from '../../hooks/useModal';
 interface Props {
   className?: string;
   classes?: {
@@ -316,7 +321,18 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
     },
     [bombFinance, addTransaction],
   );
-  
+  const { onWithdraw } = useWithdrawFromBomb();
+  const stakedBalance = useTokenBalance(bombFinance.XBOMB);
+  const [onPresentWithdraw, onDismissWithdraw] = useModal(
+    <WithdrawModal
+      max={stakedBalance}
+      onConfirm={(value) => {
+        onWithdraw(value);
+        onDismissWithdraw();
+      }}
+      tokenName={'xBOMB'}
+    />,
+  );
   return (
     <div className={`${classes.root} ${props.className || ''}`}>
       <Topology1Icon className={`${classes.topology1} ${props.classes?.topology1 || ''}`} />
@@ -561,7 +577,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       </div>
       <ClaimRewardsButtons />
       <ClaimRewardsButtons2 />
-      <WithdrawButtons2 />
+      <WithdrawButtons2></WithdrawButtons2>
       <DepositButtons2 />
       <div className={`${classes.bshares7} ${props.classes?.bshares7 || ''}`}></div>
       <div className={`${classes.earned64413298882} ${props.classes?.earned64413298882 || ''}`}>
@@ -603,7 +619,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
         </span>
       </div>
       <ClaimRewardsButtons3 />
-      <WithdrawButtons3 />
+      <WithdrawButtons3></WithdrawButtons3>
       <div className={`${classes.bSHAREBNB} ${props.classes?.bSHAREBNB || ''}`}>BSHARE-BNB</div>
       <div className={`${classes.bshareBnbLP3} ${props.classes?.bshareBnbLP3 || ''}`}></div>
       <Rectangle22704Icon className={`${classes.rectangle22704} ${props.classes?.rectangle22704 || ''}`} />
@@ -635,8 +651,10 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
         Current Price: (Bomb)^2
       </div>
       <div className={`${classes.purchaseBBond} ${props.classes?.purchaseBBond || ''}`}>Purchase BBond</div>
+      {/* <PurchaseButtons /> */}
+      
       <div className={`${classes.redeemBomb} ${props.classes?.redeemBomb || ''}`}>Redeem Bomb</div>
-      <PurchaseButtons />
+      <RedeemButtons2 />
       <RedeemButtons />
       <div className={`${classes.availableToRedeem} ${props.classes?.availableToRedeem || ''}`}>
         Available to redeem:{' '}
@@ -679,5 +697,7 @@ export const Dashboard: FC<Props> = memo(function Dashboard(props = {}) {
       <Ellipse287Icon8 className={`${classes.ellipse2878} ${props.classes?.ellipse2878 || ''}`} />
       <div className={`${classes.bshares11} ${props.classes?.bshares11 || ''}`}></div>
     </div>
+
+    
   );
 });

@@ -73,10 +73,7 @@ const ExchangeCardForDashboard: React.FC<ExchangeCardForDashboardProps> = ({
     />,
   );
   return (
-    <Card>
-      <CardContent>
-        <StyledCardContentInner>
-          <StyledCardActions>
+    <div>
             {!!account ? (
               <>
               {approveStatus !== ApprovalState.APPROVED && !disabled ? (
@@ -85,7 +82,7 @@ const ExchangeCardForDashboard: React.FC<ExchangeCardForDashboardProps> = ({
                   disabled={approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN}
                   onClick={() => catchError(approve(), `Unable to approve ${fromTokenName}`)}
                 >
-                  <div >Purchase</div>
+                  {/* <div >Purchase11</div> */}
                 </Button>
               ) : (
                 <Button
@@ -98,70 +95,68 @@ const ExchangeCardForDashboard: React.FC<ExchangeCardForDashboardProps> = ({
             ) : (
               <UnlockWallet />
             )}
-          </StyledCardActions>
-        </StyledCardContentInner>
-      </CardContent>
-    </Card>
+          
+      </div>
   );
 };
 
-const StyledCardTitle = styled.div`
-  align-items: center;
-  display: flex;
-  font-size: 20px;
-  font-weight: 700;
-  height: 64px;
-  justify-content: center;
-  color: #f9d749;
-  margin-top: ${(props) => -props.theme.spacing[3]}px;
-`;
+// const StyledCardTitle = styled.div`
+//   align-items: center;
+//   display: flex;
+//   font-size: 20px;
+//   font-weight: 700;
+//   height: 800px;
+//   justify-content: center;
+//   color: #f9d749;
+//   margin-top: ${(props) => -props.theme.spacing[3]}px;
+// `;
 
-const StyledCardIcon = styled.div`
-  background-color: ${(props) => props.theme.color.grey[900]};
-  width: 72px;
-  height: 72px;
-  border-radius: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: ${(props) => props.theme.spacing[2]}px;
-`;
+// const StyledCardIcon = styled.div`
+//   background-color: ${(props) => props.theme.color.grey[900]};
+//   width: 72px;
+//   height: 72px;
+//   border-radius: 36px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   margin-bottom: ${(props) => props.theme.spacing[2]}px;
+// `;
 
-const StyledExchanger = styled.div`
-  align-items: center;
-  display: flex;
-  margin-bottom: ${(props) => props.theme.spacing[5]}px;
-`;
+// const StyledExchanger = styled.div`
+//   align-items: center;
+//   display: flex;
+//   margin-bottom: ${(props) => props.theme.spacing[5]}px;
+// `;
 
-const StyledExchangeArrow = styled.div`
-  font-size: 20px;
-  padding-left: ${(props) => props.theme.spacing[3]}px;
-  padding-right: ${(props) => props.theme.spacing[3]}px;
-  padding-bottom: ${(props) => props.theme.spacing[4]}px;
-`;
+// const StyledExchangeArrow = styled.div`
+//   font-size: 20px;
+//   padding-left: ${(props) => props.theme.spacing[3]}px;
+//   padding-right: ${(props) => props.theme.spacing[3]}px;
+//   padding-bottom: ${(props) => props.theme.spacing[4]}px;
+// `;
 
-const StyledToken = styled.div`
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  font-weight: 600;
-`;
+// const StyledToken = styled.div`
+//   align-items: center;
+//   display: flex;
+//   flex-direction: column;
+//   font-weight: 600;
+// `;
 
-const StyledCardActions = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: ${(props) => props.theme.spacing[3]}px;
-  width: 100%;
-`;
+// const StyledCardActions = styled.div`
+//   display: flex;
+//   justify-content: center;
+//   margin-top: ${(props) => props.theme.spacing[3]}px;
+//   width: 100%;
+// `;
 
-const StyledDesc = styled.span``;
+// const StyledDesc = styled.span``;
 
-const StyledCardContentInner = styled.div`
-  align-items: center;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: space-between;
-`;
+// const StyledCardContentInner = styled.div`
+//   align-items: center;
+//   display: flex;
+//   flex: 1;
+//   flex-direction: column;
+//   justify-content: space-between;
+// `;
 
 export default ExchangeCardForDashboard;
